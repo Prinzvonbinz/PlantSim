@@ -118,7 +118,7 @@ button {
 /* ===== RESET ===== */
 #resetBtn {
   position: fixed;
-  bottom: 20px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   background: #111827;
@@ -190,7 +190,7 @@ button {
   <div id="helpBox">
     <h2>📘 Erklärung</h2>
 
-    <p>🌱 Pflanzen starten Wachstum</p>
+    <p>🌱 Pflanzen starten Wachstum durch Knopfdruck</p>
     <p>⏳ Timer läuft abhängig von Wetter + Tageszeit</p>
     <p>🌤️ Wetter beeinflusst Geschwindigkeit</p>
     <p>🌙 Nacht = langsamer, ☀️ Tag = schneller</p>
@@ -204,18 +204,18 @@ button {
 
 // ===== WEATHER =====
 const WEATHER = [
-  {icon:"☀️ Sonne", mult:1.2},
-  {icon:"☁️ Wolken", mult:1.0},
+  {icon:"☀️ Sonne", mult:2.0},
+  {icon:"☁️ Wolken", mult:1.5},
   {icon:"🌧️ Regen", mult:0.8}
 ];
 
 // ===== PLANTS =====
 let PLANTS = {
-  common: { time:30*60, color:"#22c55e", list:[{name:"Grasling",desc:"Standard Pflanze"},{name:"Löwenzahn",desc:"Kein Löwen Zahn"}]},
-  rare: { time:60*60, color:"#3b82f6", list:[{name:"Mondblatt",desc:"Ist nicht rund"},{name:"Sonnenblüter",desc:"Leuchtet auch"}]},
-  epic: { time:90*60, color:"#a855f7", list:[{name:"Flammenlilie",desc:"Für Waldbrände verantwortlich"},{name:"Eiswurz",desc:"Kann sich nicht erkälten"}]},
-  legendary: { time:120*60, color:"#f59e0b", list:[{name:"Goldorchidee",desc:"1.000.000$ Wert"},{name:"Blauer Panzerblume",desc:"Trifft immer den 1. Platz"}]},
-  mythic: { time:150*60, color:"#ef4444", list:[{name:"Kosmosbaum",desc:"Gigantisch"},{name:"Der Lebensbaum",desc:"Sorgt für alles Leben auf der Erde"}]}
+  common: { time:30*60, color:"#22c55e", list:[{name:"Grasling",desc:"Standard Pflanze"},{name:"Löwenzahn",desc:"Kein Löwen Zahn"},{name:"Allium",desc:"BastiGHG's Lieblingsblume"}]},
+  rare: { time:60*60, color:"#3b82f6", list:[{name:"Mondblatt",desc:"Ist nicht rund"},{name:"Sonnenblüter",desc:"Leuchtet auch"},{name:"Rose",desc:"Vorsicht!,Dornen!"}]},
+  epic: { time:90*60, color:"#a855f7", list:[{name:"Flammenlilie",desc:"Für Waldbrände verantwortlich"},{name:"Eiswurz",desc:"Kann sich nicht erkälten"},{name:"Titan",desc:"Flower Power"}]},
+  legendary: { time:120*60, color:"#f59e0b", list:[{name:"Goldorchidee",desc:"1.000.000$ Wert"},{name:"Blauer Panzerblume",desc:"Trifft immer den 1. Platz"},{name:"Gol D. Roger",desc:"Ein Stück der Pflanze fehlt"}]},
+  mythic: { time:150*60, color:"#ef4444", list:[{name:"Kosmosbaum",desc:"Gigantisch"},{name:"Der Lebensbaum",desc:"Sorgt für alles Leben auf der Erde"},{name:"Aurora",desc:"Kann die ganze Welt mit einem Blinzeln zerstören"}]}
 };
 
 // ===== STATE =====
