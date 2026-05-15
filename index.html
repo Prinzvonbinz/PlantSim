@@ -5,17 +5,14 @@
 <title>Plant Simulator</title>
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   font-family: Arial;
   background: #0f172a;
   color: white;
-  font-size: 13px;
-
+  font-size: 14px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -26,26 +23,40 @@ body {
 #topbar {
   flex: 0 0 auto;
   background: #1e293b;
-  padding: 6px 10px;
+  padding: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-#info {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  font-weight: bold;
-  font-size: 12px;
+/* 🔥 HEADLINE */
+#title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 1px;
 }
 
+/* INFO */
+#info {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-weight: bold;
+}
+
+/* ===== BUTTONS ===== */
 button {
   border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
+  padding: 10px 14px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: bold;
+  transition: 0.15s;
+}
+
+button:hover {
+  transform: scale(1.05);
 }
 
 #plantBtn { background: #22c55e; }
@@ -55,20 +66,20 @@ button {
 #panel {
   flex: 1;
   overflow-y: auto;
-  padding: 6px 10px;
+  padding: 8px 12px;
 }
 
-/* ===== ACCORDION ===== */
+/* ===== RARITY ===== */
 .rarity {
   margin-bottom: 10px;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   background: #111827;
 }
 
 .rarityHeader {
-  padding: 8px;
-  font-weight: bold;
+  padding: 10px;
+  font-weight: 800;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -78,7 +89,7 @@ button {
 
 .rarityContent {
   display: none;
-  padding: 6px;
+  padding: 8px;
 }
 
 .rarity.open .rarityContent {
@@ -89,28 +100,36 @@ button {
 .plantBox {
   background: #1f2937;
   margin: 6px 0;
-  padding: 6px 8px;
-  border-radius: 6px;
+  padding: 8px;
+  border-radius: 8px;
   border-left: 4px solid #22c55e;
-  line-height: 1.2;
 }
 
 .locked {
   opacity: 0.35;
 }
 
-/* ===== RESET ===== */
+/* ===== RESET BUTTON ===== */
 #resetBtn {
   position: fixed;
-  bottom: 10px;
+  bottom: 14px;
   left: 50%;
   transform: translateX(-50%);
   background: #111827;
   color: white;
-  border: 1px solid #374151;
-  z-index: 100;
-  padding: 6px 10px;
-  border-radius: 8px;
+  border: 2px solid #374151;
+
+  padding: 12px 18px;
+  border-radius: 12px;
+
+  font-size: 15px;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+#resetBtn:hover {
+  background: #1f2937;
 }
 </style>
 </head>
@@ -118,31 +137,33 @@ button {
 <body>
 
 <div id="topbar">
+  <div id="title">🌱 Plant Simulator</div>
+
   <div>
-    <button id="plantBtn">🌱 Pflanzen</button>
-    <button id="reviveBtn" style="display:none">🔄 Revive</button>
+    <button id="plantBtn">Pflanzen</button>
+    <button id="reviveBtn" style="display:none">Revive</button>
   </div>
 
   <div id="info">
     <div id="weather">---</div>
-    <div id="timer">⏳ bereit</div>
+    <div id="timer">bereit</div>
   </div>
 </div>
 
 <div id="panel"></div>
 
-<button id="resetBtn">🔁 Reset</button>
+<button id="resetBtn">🔁 Reset Game</button>
 
 <script>
 
-// ================= WEATHER =================
+// ===== WEATHER =====
 const WEATHER = [
   {icon:"☀️", mult:1.2},
   {icon:"☁️", mult:1.0},
   {icon:"🌧️", mult:0.8}
 ];
 
-// ================= RARITY =================
+// ===== RARITY =====
 const RARITY_TABLE = [
   {key:"common", weight:40},
   {key:"rare", weight:25},
@@ -151,14 +172,14 @@ const RARITY_TABLE = [
   {key:"mythic", weight:9}
 ];
 
-// ================= PLANTS =================
+// ===== PLANTS =====
 let PLANTS = {
   common: {
     time: 30 * 60,
     color:"#22c55e",
     list:[
       {name:"Grasling", desc:"Lieblingspflanze vom Schaf"},
-      {name:"Moosball", desc:"Nicht kugelförmig genug"}
+      {name:"Moosball", desc:"Rund aber nicht perfekt"}
     ]
   },
   rare: {
@@ -166,57 +187,53 @@ let PLANTS = {
     color:"#3b82f6",
     list:[
       {name:"Mondblatt", desc:"Leuchtet im Dunkeln"},
-      {name:"Eiswurz", desc:"Kalt wie dein Kühlschrank"}
+      {name:"Eiswurz", desc:"Sehr kalt"}
     ]
   },
   epic: {
     time: 90 * 60,
     color:"#a855f7",
     list:[
-      {name:"Flammenlilie", desc:"Toastet dein Toast"},
-      {name:"Schattenrose", desc:"Existiert nur halb"}
+      {name:"Flammenlilie", desc:"Brennt ohne Feuer"},
+      {name:"Schattenrose", desc:"Halb real"}
     ]
   },
   legendary: {
     time: 120 * 60,
     color:"#f59e0b",
     list:[
-      {name:"Goldorchidee", desc:"Sehr teuer"},
-      {name:"Titanwurzel", desc:"Sehr stark"}
+      {name:"Goldorchidee", desc:"Sehr selten"},
+      {name:"Titanwurzel", desc:"Unzerstörbar"}
     ]
   },
   mythic: {
     time: 150 * 60,
     color:"#ef4444",
     list:[
-      {name:"Kosmosbaum", desc:"Größer als alles"},
-      {name:"Void Lotus", desc:"Nichts ist hier"}
+      {name:"Kosmosbaum", desc:"Gigantisch"},
+      {name:"Void Lotus", desc:"Existiert nicht"}
     ]
   }
 };
 
-// ================= STATE =================
+// ===== STATE =====
 let state = JSON.parse(localStorage.getItem("plantState") || "{}");
 
 if (!state.collection) state.collection = {};
 if (!state.growth) state.growth = null;
-if (!state.weather) state.weather = WEATHER[Math.floor(Math.random()*WEATHER.length)];
-if (!state.lastWeatherChange) state.lastWeatherChange = Date.now();
-if (!state.reviveLevel) state.reviveLevel = 0;
 if (!state.openRarity) state.openRarity = { common:true };
 
 function save() {
   localStorage.setItem("plantState", JSON.stringify(state));
 }
 
-// ================= MULTIPLIER =================
+// ===== MULTIPLIER =====
 function getMultiplier() {
   const h = new Date().getHours();
-  const time = (h >= 6 && h < 18) ? 2 : 0.5;
-  return time * state.weather.mult;
+  return ((h >= 6 && h < 18) ? 2 : 0.5);
 }
 
-// ================= RANDOM =================
+// ===== RANDOM =====
 function getRandomRarity() {
   let total = RARITY_TABLE.reduce((a,b)=>a+b.weight,0);
   let rand = Math.random() * total;
@@ -228,7 +245,7 @@ function getRandomRarity() {
   return "common";
 }
 
-// ================= PLANT =================
+// ===== PLANT =====
 document.getElementById("plantBtn").onclick = () => {
   if (state.growth) return;
 
@@ -247,12 +264,9 @@ document.getElementById("plantBtn").onclick = () => {
   save();
 };
 
-// ================= TIMER =================
+// ===== TIMER =====
 function updateTimer() {
-  if (!state.growth) {
-    document.getElementById("timer").innerText = "⏳ bereit";
-    return;
-  }
+  if (!state.growth) return;
 
   const g = state.growth;
   const elapsed = (Date.now() - g.start) * getMultiplier();
@@ -262,12 +276,12 @@ function updateTimer() {
   const s = Math.floor((remaining % 60000)/1000);
 
   document.getElementById("timer").innerText =
-    `⏳ ${m}:${s.toString().padStart(2,"0")}`;
+    `${m}:${s.toString().padStart(2,"0")}`;
 
   if (remaining <= 0) finishPlant();
 }
 
-// ================= FINISH =================
+// ===== FINISH =====
 function finishPlant() {
   const g = state.growth;
 
@@ -282,67 +296,32 @@ function finishPlant() {
   render();
 }
 
-// ================= WEATHER =================
-function updateWeather() {
-  if (Date.now() - state.lastWeatherChange > 600000) {
-    state.weather = WEATHER[Math.floor(Math.random()*WEATHER.length)];
-    state.lastWeatherChange = Date.now();
-    save();
-  }
-
-  const h = new Date().getHours();
-  const day = (h >= 6 && h < 18) ? "☀️ Tag" : "🌙 Nacht";
-
-  document.getElementById("weather").innerText =
-    `${day} | ${state.weather.icon}`;
-}
-
-// ================= TOGGLE =================
+// ===== TOGGLE =====
 function toggleRarity(r) {
   state.openRarity[r] = !state.openRarity[r];
   save();
   render();
 }
 
-// ================= RESET =================
+// ===== RESET =====
 document.getElementById("resetBtn").onclick = () => {
-  localStorage.removeItem("plantState");
+  localStorage.clear();
   location.reload();
 };
 
-// ================= REVIVE =================
+// ===== REVIVE =====
 document.getElementById("reviveBtn").onclick = () => {
   state.collection = {};
-  state.growth = null;
-  state.reviveLevel++;
-
-  for (let r of Object.keys(PLANTS)) {
-    PLANTS[r].list.push({
-      name: "Neue " + r + " " + state.reviveLevel,
-      desc: "Revive freigeschaltet"
-    });
-  }
-
   save();
   render();
 };
 
-// ================= CHECK REVIVE =================
-function checkRevive() {
-  const total = Object.values(PLANTS).reduce((a,b)=>a+b.list.length,0);
-  const owned = Object.keys(state.collection).length;
-
-  document.getElementById("reviveBtn").style.display =
-    owned === total ? "inline-block" : "none";
-}
-
-// ================= RENDER =================
+// ===== RENDER =====
 function render() {
   const panel = document.getElementById("panel");
   let html = "";
 
   for (let r of Object.keys(PLANTS)) {
-
     const open = state.openRarity[r];
 
     html += `
@@ -362,8 +341,7 @@ function render() {
         <div class="plantBox ${owned ? "" : "locked"}"
         style="border-left:4px solid ${PLANTS[r].color}">
           <b>${p.name}</b><br>
-          ${owned ? p.desc : "???"}<br>
-          ${owned ? "x"+owned.count : "Nicht entdeckt"}
+          ${owned ? p.desc : "???"}
         </div>
       `;
     });
@@ -374,15 +352,12 @@ function render() {
   panel.innerHTML = html;
 }
 
-// ================= LOOP =================
+// ===== LOOP =====
 setInterval(() => {
   updateTimer();
-  updateWeather();
-  checkRevive();
 }, 200);
 
 render();
-updateWeather();
 
 </script>
 
