@@ -10,6 +10,7 @@ body {
   font-family: Arial;
   background: #0f172a;
   color: white;
+  font-size: 14px;
 }
 
 /* ===== TOP BAR ===== */
@@ -18,45 +19,53 @@ body {
   top: 0;
   z-index: 10;
   background: #1e293b;
-  padding: 10px;
+  padding: 6px 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* TIMER + WEATHER */
 #info {
   display: flex;
-  gap: 15px;
+  gap: 10px;
   align-items: center;
   font-weight: bold;
+  font-size: 13px;
 }
 
 button {
   border: none;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 13px;
 }
 
 #plantBtn { background: #22c55e; }
-#reviveBtn { background: #ef4444; margin-left: 10px; }
+#reviveBtn { background: #ef4444; margin-left: 8px; }
 
 /* ===== PANEL ===== */
 #panel {
-  padding: 15px;
+  padding: 8px 10px;
 }
 
-/* PLANT DISPLAY */
+/* COMPACT PLANTS */
 .plantBox {
   background: #1f2937;
-  margin: 10px 0;
-  padding: 10px;
-  border-radius: 8px;
+  margin: 6px 0;
+  padding: 6px 8px;
+  border-radius: 6px;
   border-left: 4px solid #22c55e;
+  line-height: 1.2;
 }
 
-.locked { opacity: 0.3; }
+.plantBox b {
+  font-size: 13px;
+}
+
+.locked {
+  opacity: 0.35;
+}
 </style>
 </head>
 
@@ -85,46 +94,55 @@ const WEATHER = [
   {icon:"🌧️", mult:0.8}
 ];
 
-// ================= PLANTS (5 TIERS) =================
+// ================= RARITY WEIGHTS =================
+const RARITY_TABLE = [
+  {key:"common", weight:40},
+  {key:"rare", weight:25},
+  {key:"epic", weight:15},
+  {key:"legendary", weight:11},
+  {key:"mythic", weight:9}
+];
+
+// ================= PLANTS =================
 let PLANTS = {
   common: {
     time: 30 * 60,
     color:"#22c55e",
     list:[
-      {name:"Grasling", desc:"Die Lieblingspflanze des Schafes"},
-      {name:"Moosball", desc:"Nicht zum Ball spielen geeignet"}
+      {name:"Grasling", desc:"Lieblingspflanze vom Schaf"},
+      {name:"Moosball", desc:"Nicht kugelförmig genug für Sport"}
     ]
   },
   rare: {
     time: 60 * 60,
     color:"#3b82f6",
     list:[
-      {name:"Mondblatt", desc:"Grell wie der Mond"},
-      {name:"Eiswurz", desc:"Lebt in Alaska"}
+      {name:"Mondblatt", desc:"Leuchtet im Dunkeln"},
+      {name:"Eiswurz", desc:"Kalt wie dein Kühlschrank"}
     ]
   },
   epic: {
     time: 90 * 60,
     color:"#a855f7",
     list:[
-      {name:"Flammenlilie", desc:"Kann dein Toast toasten"},
-      {name:"Schattenrose", desc:"In der Nacht nicht zu sehen"}
+      {name:"Flammenlilie", desc:"Toastet dein Toast"},
+      {name:"Schattenrose", desc:"Existiert nur halb"}
     ]
   },
   legendary: {
     time: 120 * 60,
     color:"#f59e0b",
     list:[
-      {name:"Goldorchidee", desc:"Millionen wert"},
-      {name:"Titanwurzel", desc:"Könnte dir deinen Arm brechen"}
+      {name:"Goldorchidee", desc:"Sehr teuer"},
+      {name:"Titanwurzel", desc:"Sehr stark"}
     ]
   },
   mythic: {
     time: 150 * 60,
     color:"#ef4444",
     list:[
-      {name:"Kosmosbaum", desc:"So groß wie das Universum"},
-      {name:"Void Lotus", desc:"Das unendliche Nichts"}
+      {name:"Kosmosbaum", desc:"Größer als alles"},
+      {name:"Void Lotus", desc:"Nichts ist hier"}
     ]
   }
 };
@@ -153,12 +171,24 @@ function getMultiplier() {
   return time * state.weather.mult;
 }
 
+// ================= WEIGHTED RARITY =================
+function getRandomRarity() {
+  let total = RARITY_TABLE.reduce((a,b)=>a+b.weight,0);
+  let rand = Math.random() * total;
+
+  for (let r of RARITY_TABLE) {
+    if (rand < r.weight) return r.key;
+    rand -= r.weight;
+  }
+
+  return "common";
+}
+
 // ================= PLANT =================
 document.getElementById("plantBtn").onclick = () => {
   if (state.growth) return;
 
-  const keys = Object.keys(PLANTS);
-  const r = keys[Math.floor(Math.random()*keys.length)];
+  const r = getRandomRarity();
   const pool = PLANTS[r];
 
   const plant = pool.list[Math.floor(Math.random()*pool.list.length)];
@@ -174,7 +204,7 @@ document.getElementById("plantBtn").onclick = () => {
   save();
 };
 
-// ================= TIMER (LIVE) =================
+// ================= TIMER =================
 function updateTimer() {
   if (!state.growth) {
     document.getElementById("timer").innerText = "⏳ bereit";
@@ -231,9 +261,8 @@ function checkRevive() {
   const total = getTotalPlants();
   const owned = Object.keys(state.collection).length;
 
-  if (owned === total) {
-    document.getElementById("reviveBtn").style.display = "inline-block";
-  }
+  document.getElementById("reviveBtn").style.display =
+    owned === total ? "inline-block" : "none";
 }
 
 document.getElementById("reviveBtn").onclick = () => {
@@ -244,37 +273,33 @@ document.getElementById("reviveBtn").onclick = () => {
   addNewPlants();
 
   save();
-  document.getElementById("reviveBtn").style.display = "none";
   render();
 };
 
-// +1 neue Pflanze pro Seltenheit
+// ================= NEW PLANTS =================
 function addNewPlants() {
   for (let r of Object.keys(PLANTS)) {
     PLANTS[r].list.push({
-      name: "Neue " + r + " Pflanze " + state.reviveLevel,
-      desc: "Freigeschaltet durch Revive"
+      name: "Neue " + r + " " + state.reviveLevel,
+      desc: "Revive freigeschaltet"
     });
   }
 }
 
 // ================= HELPERS =================
 function getTotalPlants() {
-  let t = 0;
-  for (let r of Object.keys(PLANTS)) {
-    t += PLANTS[r].list.length;
-  }
-  return t;
+  return Object.values(PLANTS)
+    .reduce((a,b)=>a + b.list.length, 0);
 }
 
-// ================= RENDER (ONE SCREEN) =================
+// ================= RENDER =================
 function render() {
   const panel = document.getElementById("panel");
 
   let html = "";
 
   for (let r of Object.keys(PLANTS)) {
-    html += `<h3>${r.toUpperCase()}</h3>`;
+    html += `<h4 style="margin:8px 0 4px 0">${r.toUpperCase()}</h4>`;
 
     PLANTS[r].list.forEach(p => {
       const owned = state.collection[p.name];
