@@ -29,7 +29,6 @@ body {
   align-items: center;
 }
 
-/* TITLE AREA */
 #titleBox {
   display: flex;
   align-items: center;
@@ -41,7 +40,6 @@ body {
   font-weight: 900;
 }
 
-/* HELP BUTTON */
 #helpBtn {
   width: 30px;
   height: 30px;
@@ -53,11 +51,6 @@ body {
   border: none;
 }
 
-#helpBtn:hover {
-  background: #475569;
-}
-
-/* INFO */
 #info {
   display: flex;
   gap: 14px;
@@ -65,7 +58,6 @@ body {
   font-weight: bold;
 }
 
-/* BUTTONS */
 button {
   border: none;
   padding: 10px 14px;
@@ -78,14 +70,14 @@ button {
 #plantBtn { background: #22c55e; }
 #reviveBtn { background: #ef4444; margin-left: 8px; }
 
-/* PANEL */
+/* ===== PANEL ===== */
 #panel {
   flex: 1;
   overflow-y: auto;
   padding: 8px 12px;
 }
 
-/* RARITY */
+/* ===== RARITY ===== */
 .rarity {
   margin-bottom: 10px;
   border-radius: 10px;
@@ -102,8 +94,14 @@ button {
   background: #1f2937;
 }
 
-.rarityContent { display: none; padding: 8px; }
-.rarity.open .rarityContent { display: block; }
+.rarityContent {
+  display: none;
+  padding: 8px;
+}
+
+.rarity.open .rarityContent {
+  display: block;
+}
 
 .plantBox {
   background: #1f2937;
@@ -115,7 +113,7 @@ button {
 
 .locked { opacity: 0.35; }
 
-/* RESET */
+/* ===== RESET ===== */
 #resetBtn {
   position: fixed;
   bottom: 14px;
@@ -129,7 +127,7 @@ button {
   font-weight: 900;
 }
 
-/* ===== HELP OVERLAY ===== */
+/* ===== HELP ===== */
 #helpOverlay {
   position: fixed;
   inset: 0;
@@ -144,13 +142,8 @@ button {
   width: 85%;
   max-width: 600px;
   background: #111827;
-  border-radius: 12px;
   padding: 16px;
-  border: 1px solid #334155;
-}
-
-#helpBox h2 {
-  margin-top: 0;
+  border-radius: 12px;
 }
 
 .helpClose {
@@ -166,7 +159,7 @@ button {
 
 <body>
 
-<!-- ===== TOPBAR ===== -->
+<!-- TOPBAR -->
 <div id="topbar">
 
   <div id="titleBox">
@@ -190,18 +183,16 @@ button {
 
 <button id="resetBtn">🔁 Reset</button>
 
-<!-- ===== HELP OVERLAY ===== -->
+<!-- HELP -->
 <div id="helpOverlay">
   <div id="helpBox">
-    <h2>📘 Spiel Erklärung</h2>
+    <h2>📘 Erklärung</h2>
 
-    <p><b>🌱 Pflanzen Button:</b> Startet eine neue Pflanze.</p>
-    <p><b>🔄 Revive:</b> Reset der Sammlung + neue Pflanzen freischalten.</p>
-    <p><b>🌤️ Wetter:</b> Ändert Wachstums-Speed (Sonne schneller, Regen langsamer).</p>
-    <p><b>🌙 Tageszeit:</b> Tag = schneller Wachstum, Nacht = langsamer.</p>
-
-    <p><b>❗ Seltenheit:</b> Common → Mythic beeinflusst Zeit & Wert.</p>
-    <p><b>📦 Einklappen:</b> Jede Seltenheit kann auf/zu geklickt werden.</p>
+    <p>🌱 Pflanzen starten Wachstum</p>
+    <p>⏳ Timer läuft abhängig von Wetter + Tageszeit</p>
+    <p>🌤️ Wetter beeinflusst Geschwindigkeit</p>
+    <p>🌙 Nacht = langsamer, ☀️ Tag = schneller</p>
+    <p>📦 Seltenheiten sind einklappbar</p>
 
     <button class="helpClose" onclick="closeHelp()">Schließen</button>
   </div>
@@ -216,18 +207,9 @@ const WEATHER = [
   {icon:"🌧️ Regen", mult:0.8}
 ];
 
-// ===== RARITY =====
-const RARITY_TABLE = [
-  {key:"common", weight:40},
-  {key:"rare", weight:25},
-  {key:"epic", weight:15},
-  {key:"legendary", weight:11},
-  {key:"mythic", weight:9}
-];
-
 // ===== PLANTS =====
 let PLANTS = {
-  common: { time:30*60, color:"#22c55e", list:[{name:"Grasling",desc:"Schaf liebt es"}]},
+  common: { time:30*60, color:"#22c55e", list:[{name:"Grasling",desc:"Standard Pflanze"}]},
   rare: { time:60*60, color:"#3b82f6", list:[{name:"Mondblatt",desc:"Leuchtet"}]},
   epic: { time:90*60, color:"#a855f7", list:[{name:"Flammenlilie",desc:"Heiß"}]},
   legendary: { time:120*60, color:"#f59e0b", list:[{name:"Goldorchidee",desc:"Selten"}]},
@@ -242,7 +224,7 @@ if (!state.growth) state.growth = null;
 if (!state.openRarity) state.openRarity = { common:true };
 if (!state.weather) state.weather = WEATHER[0];
 
-function save() {
+function save(){
   localStorage.setItem("plantState", JSON.stringify(state));
 }
 
@@ -251,68 +233,82 @@ document.getElementById("helpBtn").onclick = () => {
   document.getElementById("helpOverlay").style.display = "flex";
 };
 
-function closeHelp() {
+function closeHelp(){
   document.getElementById("helpOverlay").style.display = "none";
 }
 
-// ===== TIME + WEATHER DISPLAY =====
-function updateInfo() {
+// ===== MULTIPLIER =====
+function getMultiplier(){
   const h = new Date().getHours();
-  const day = (h >= 6 && h < 18) ? "☀️ Tag" : "🌙 Nacht";
-
-  document.getElementById("weather").innerText =
-    `${day} | ${state.weather.icon}`;
-}
-
-// ===== TIMER =====
-function getMultiplier() {
-  const h = new Date().getHours();
-  const time = (h >= 6 && h < 18) ? 2 : 0.5;
-  return time * state.weather.mult;
-}
-
-function updateTimer() {
-  if (!state.growth) return;
-
-  const g = state.growth;
-  const elapsed = (Date.now() - g.start) * getMultiplier();
-  const remaining = Math.max(0, g.duration - elapsed);
-
-  const m = Math.floor(remaining / 60000);
-  const s = Math.floor((remaining % 60000)/1000);
-
-  document.getElementById("timer").innerText =
-    `${m}:${s.toString().padStart(2,"0")}`;
-
-  if (remaining <= 0) {
-    state.collection[g.name] = state.collection[g.name] || {count:0,desc:g.desc};
-    state.collection[g.name].count++;
-    state.growth = null;
-    save();
-    render();
-  }
+  return ((h>=6 && h<18)?2:0.5) * state.weather.mult;
 }
 
 // ===== PLANT =====
 document.getElementById("plantBtn").onclick = () => {
-  if (state.growth) return;
+  if(state.growth) return;
 
-  const r = Object.keys(PLANTS)[Math.floor(Math.random()*Object.keys(PLANTS).length)];
-  const pool = PLANTS[r];
-  const plant = pool.list[0];
+  const keys = Object.keys(PLANTS);
+  const r = keys[Math.floor(Math.random()*keys.length)];
+  const plant = PLANTS[r].list[0];
 
   state.growth = {
     name: plant.name,
     desc: plant.desc,
+    rarity: r,
     start: Date.now(),
-    duration: pool.time*1000
+    duration: PLANTS[r].time*1000
   };
 
   save();
 };
 
+// ===== FINISH =====
+function finishPlant(){
+  const g = state.growth;
+  if(!g) return;
+
+  if(!state.collection[g.name]){
+    state.collection[g.name] = {count:0, desc:g.desc};
+  }
+
+  state.collection[g.name].count++;
+
+  state.growth = null;
+  save();
+  render();
+}
+
+// ===== TIMER =====
+function updateTimer(){
+  if(!state.growth){
+    document.getElementById("timer").innerText = "bereit";
+    return;
+  }
+
+  const g = state.growth;
+  const elapsed = (Date.now()-g.start) * getMultiplier();
+  const remaining = Math.max(0, g.duration - elapsed);
+
+  const m = Math.floor(remaining/60000);
+  const s = Math.floor((remaining%60000)/1000);
+
+  document.getElementById("timer").innerText =
+    `${m}:${s.toString().padStart(2,"0")}`;
+
+  if(remaining<=0) finishPlant();
+}
+
+// ===== INFO =====
+function updateInfo(){
+  const h = new Date().getHours();
+  const day = (h>=6 && h<18) ? "☀️ Tag" : "🌙 Nacht";
+
+  document.getElementById("weather").innerText =
+    `${day} | ${state.weather.icon}`;
+}
+
 // ===== TOGGLE =====
-function toggleRarity(r) {
+function toggleRarity(r){
   state.openRarity[r] = !state.openRarity[r];
   save();
   render();
@@ -325,26 +321,26 @@ document.getElementById("resetBtn").onclick = () => {
 };
 
 // ===== RENDER =====
-function render() {
+function render(){
   let html = "";
 
-  for (let r of Object.keys(PLANTS)) {
+  for(let r of Object.keys(PLANTS)){
     const open = state.openRarity[r];
 
     html += `
-      <div class="rarity ${open ? "open":""}">
+      <div class="rarity ${open?"open":""}">
         <div class="rarityHeader" onclick="toggleRarity('${r}')">
           <span>${r.toUpperCase()}</span>
-          <span>${open ? "▲":"▼"}</span>
+          <span>${open?"▲":"▼"}</span>
         </div>
         <div class="rarityContent">
     `;
 
-    PLANTS[r].list.forEach(p => {
+    PLANTS[r].list.forEach(p=>{
       const owned = state.collection[p.name];
 
       html += `
-        <div class="plantBox ${owned ? "" : "locked"}"
+        <div class="plantBox ${owned?"":"locked"}"
         style="border-left:4px solid ${PLANTS[r].color}">
           <b>${p.name}</b><br>
           ${owned ? p.desc : "???"}
@@ -359,10 +355,10 @@ function render() {
 }
 
 // ===== LOOP =====
-setInterval(() => {
+setInterval(()=>{
   updateTimer();
   updateInfo();
-}, 200);
+},200);
 
 render();
 updateInfo();
