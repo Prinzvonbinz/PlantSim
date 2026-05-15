@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Plant Simulator</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+}
+
+/* ===== TOP BAR ===== */
+#topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #1e293b;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* TIMER + WEATHER */
+#info {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  font-weight: bold;
+}
+
+button {
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#plantBtn { background: #22c55e; }
+#reviveBtn { background: #ef4444; margin-left: 10px; }
+
+/* ===== PANEL ===== */
+#panel {
+  padding: 15px;
+}
+
+/* PLANT DISPLAY */
+.plantBox {
+  background: #1f2937;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 8px;
+  border-left: 4px solid #22c55e;
+}
+
+.locked { opacity: 0.3; }
+</style>
+</head>
+
+<body>
+
+<div id="topbar">
+  <div>
+    <button id="plantBtn">🌱 Pflanzen</button>
+    <button id="reviveBtn" style="display:none">🔄 Revive</button>
+  </div>
+
+  <div id="info">
+    <div id="weather">---</div>
+    <div id="timer">⏳ bereit</div>
+  </div>
+</div>
+
+<div id="panel"></div>
+
+<script>
+
+// ================= WEATHER =================
+const WEATHER = [
+  {icon:"☀️", mult:1.2},
+  {icon:"☁️", mult:1.0},
+  {icon:"🌧️", mult:0.8}
+];
+
+// ================= PLANTS (5 TIERS) =================
+let PLANTS = {
+  common: {
+    time: 30 * 60,
+    color:"#22c55e",
+    list:[
+      {name:"Grasling", desc:"Die Lieblingspflanze des Schafes"},
+      {name:"Moosball", desc:"Nicht zum Ball spielen geeignet"}
+    ]
+  },
+  rare: {
+    time: 60 * 60,
+    color:"#3b82f6",
+    list:[
+      {name:"Mondblatt", desc:"Grell wie der Mond"},
+      {name:"Eiswurz", desc:"Lebt in Alaska"}
+    ]
+  },
+  epic: {
+    time: 120 * 60,
+    color:"#a855f7",
+    list:[
+      {name:"Flammenlilie", desc:"Kann dein Toast toasten"},
+      {name:"Schattenrose", desc:"In der Nacht nicht zu sehen"}
+    ]
+  },
+  legendary: {
+    time: 240 * 60,
+    color:"#f59e0b",
+    list:[
+      {name:"Goldorchidee", desc:"Millionen wert"},
+      {name:"Titanwurzel", desc:"Könnte dir deinen Arm brechen"}
+    ]
+  },
+  mythic: {
+    time: 480 * 60,
+    color:"#ef4444",
+    list:[
+      {name:"Kosmosbaum", desc:"So groß wie das Universum"},
+      {name:"Void Lotus", desc:"Das unendliche Nichts"}
+    ]
+  }
+};
+
+// ================= STATE =================
+let state = JSON.parse(localStorage.getItem("plantState") || "{}");
+
+if (!state.collection) state.collection = {};
+if (!state.growth) state.growth = null;
+
+if (!state.weather) {
+  state.weather = WEATHER[Math.floor(Math.random()*WEATHER.length)];
+}
+if (!state.lastWeatherChange) state.lastWeatherChange = Date.now();
+
+if (!state.reviveLevel) state.reviveLevel = 0;
+
+function save() {
+  localStorage.setItem("plantState", JSON.stringify(state));
+}
+
+// ================= MULTIPLIER =================
+function getMultiplier() {
+  const h = new Date().getHours();
+  const time = (h >= 6 && h < 18) ? 2 : 0.5;
+  return time * state.weather.mult;
+}
+
+// ================= PLANT =================
+document.getElementById("plantBtn").onclick = () => {
+  if (state.growth) return;
+
+  const keys = Object.keys(PLANTS);
+  const r = keys[Math.floor(Math.random()*keys.length)];
+  const pool = PLANTS[r];
+
+  const plant = pool.list[Math.floor(Math.random()*pool.list.length)];
+
+  state.growth = {
+    name: plant.name,
+    desc: plant.desc,
+    rarity: r,
+    start: Date.now(),
+    duration: pool.time * 1000
+  };
+
+  save();
+};
+
+// ================= TIMER (LIVE) =================
+function updateTimer() {
+  if (!state.growth) {
+    document.getElementById("timer").innerText = "⏳ bereit";
+    return;
+  }
+
+  const g = state.growth;
+
+  const elapsed = (Date.now() - g.start) * getMultiplier();
+  const remaining = Math.max(0, g.duration - elapsed);
+
+  const m = Math.floor(remaining / 60000);
+  const s = Math.floor((remaining % 60000)/1000);
+
+  document.getElementById("timer").innerText =
+    `⏳ ${m}:${s.toString().padStart(2,"0")}`;
+
+  if (remaining <= 0) finishPlant();
+}
+
+// ================= FINISH =================
+function finishPlant() {
+  const g = state.growth;
+
+  if (!state.collection[g.name]) {
+    state.collection[g.name] = {count:0, desc:g.desc};
+  }
+
+  state.collection[g.name].count++;
+
+  state.growth = null;
+  save();
+
+  render();
+}
+
+// ================= WEATHER =================
+function updateWeather() {
+  if (Date.now() - state.lastWeatherChange > 600000) {
+    state.weather = WEATHER[Math.floor(Math.random()*WEATHER.length)];
+    state.lastWeatherChange = Date.now();
+    save();
+  }
+
+  const h = new Date().getHours();
+  const day = (h >= 6 && h < 18) ? "☀️ Tag" : "🌙 Nacht";
+
+  document.getElementById("weather").innerText =
+    `${day} | ${state.weather.icon}`;
+}
+
+// ================= REVIVE =================
+function checkRevive() {
+  const total = getTotalPlants();
+  const owned = Object.keys(state.collection).length;
+
+  if (owned === total) {
+    document.getElementById("reviveBtn").style.display = "inline-block";
+  }
+}
+
+document.getElementById("reviveBtn").onclick = () => {
+  state.collection = {};
+  state.growth = null;
+  state.reviveLevel++;
+
+  addNewPlants();
+
+  save();
+  document.getElementById("reviveBtn").style.display = "none";
+  render();
+};
+
+// +1 neue Pflanze pro Seltenheit
+function addNewPlants() {
+  for (let r of Object.keys(PLANTS)) {
+    PLANTS[r].list.push({
+      name: "Neue " + r + " Pflanze " + state.reviveLevel,
+      desc: "Freigeschaltet durch Revive"
+    });
+  }
+}
+
+// ================= HELPERS =================
+function getTotalPlants() {
+  let t = 0;
+  for (let r of Object.keys(PLANTS)) {
+    t += PLANTS[r].list.length;
+  }
+  return t;
+}
+
+// ================= RENDER (ONE SCREEN) =================
+function render() {
+  const panel = document.getElementById("panel");
+
+  let html = "";
+
+  for (let r of Object.keys(PLANTS)) {
+    html += `<h3>${r.toUpperCase()}</h3>`;
+
+    PLANTS[r].list.forEach(p => {
+      const owned = state.collection[p.name];
+
+      html += `
+        <div class="plantBox ${owned ? "" : "locked"}"
+        style="border-left:4px solid ${PLANTS[r].color}">
+          <b>${p.name}</b><br>
+          ${owned ? p.desc : "???"}<br>
+          ${owned ? "x"+owned.count : "Nicht entdeckt"}
+        </div>
+      `;
+    });
+  }
+
+  panel.innerHTML = html;
+}
+
+// ================= LOOP =================
+setInterval(() => {
+  updateTimer();
+  updateWeather();
+  checkRevive();
+}, 200);
+
+render();
+updateWeather();
+
+</script>
+
+</body>
+</html>
